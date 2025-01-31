@@ -16,6 +16,8 @@ jobs:
   release:
     name: Release for ${{ matrix.platform.target }}
     runs-on: ${{ matrix.platform.os }}
+    permissions:
+      contents: write
     env:
       TARGET: ${{ matrix.platform.target }}
       PACKAGE: ${{ matrix.package }}
