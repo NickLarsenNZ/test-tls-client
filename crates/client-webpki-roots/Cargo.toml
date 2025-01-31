@@ -1,0 +1,7 @@
+[package]
+name = "client-webpki-roots"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { workspace = true, features = ["rustls-tls-webpki-roots"] }
