@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 reqwest = { workspace = true, features = ["rustls-tls-native-roots"] }
+tokio.workspace = true
