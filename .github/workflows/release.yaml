@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+
+env:
+  RUST_VERSION: 1.84.1
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  RUSTFLAGS: "-D warnings"
+  RUSTDOCFLAGS: "-D warnings"
+  RUST_LOG: "info"
+
+jobs:
+  release:
+    name: Release for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET: ${{ matrix.target }}
+      PACKAGE: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-20.04 # We don't use ubuntu-latest because we want to build against an old glibc version. (18.04 has glibc 2.27, 20.04 has glibc 2.31, 22.04 has glibc 2.35)
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-22.04-arm # 2025-01: The ARM runners only support Ubuntu 22.04 or 24.04, so we can't pick 20.04:
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+        package:
+          - client-native-roots
+          - client-webpki-roots
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: ${{ env.TARGET }}
+
+      - name: Build Binary
+        if: matrix.os != 'windows-latest'
+        run: cargo build --target "${TARGET}" --release --package "${PACKAGE}"
+
+      - name: Rename Binary
+        run:  mv "target/${TARGET}/release/${PACKAGE}" "${PACKAGE}-${TARGET}"
+
+      - name: Upload Release Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
+        with:
+          files: "${PACKAGE}-${TARGET}"
