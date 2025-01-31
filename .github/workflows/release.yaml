@@ -14,10 +14,10 @@ env:
 
 jobs:
   release:
-    name: Release for ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
+    name: Release for ${{ matrix.platform.target }}
+    runs-on: ${{ matrix.platform.os }}
     env:
-      TARGET: ${{ matrix.target }}
+      TARGET: ${{ matrix.platform.target }}
       PACKAGE: ${{ matrix.package }}
     strategy:
       fail-fast: false
@@ -25,7 +25,7 @@ jobs:
         package:
           - client-native-roots
           - client-webpki-roots
-        include:
+        platform:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-20.04 # We don't use ubuntu-latest because we want to build against an old glibc version. (18.04 has glibc 2.27, 20.04 has glibc 2.31, 22.04 has glibc 2.35)
           - target: aarch64-unknown-linux-gnu
@@ -44,7 +44,6 @@ jobs:
           targets: ${{ env.TARGET }}
 
       - name: Build Binary
-        if: matrix.os != 'windows-latest'
         run: cargo build --target "${TARGET}" --release --package "${PACKAGE}"
 
       - name: Rename Binary
